@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(MEMBER)
+  phone        String?
+  address      String?
+  membershipId String?   @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  books        Book[]    @relation("UserBooks")
+  events       Event[]   @relation("UserEvents")
+  comments     Comment[]
+}
+
+model Book {
+  id            String    @id @default(cuid())
+  title         String
+  titleBn       String
+  author        String
+  authorBn      String
+  publisher     String
+  publisherBn   String
+  isbn          String    @unique
+  category      String
+  categoryBn    String
+  edition       String
+  language      String
+  pages         Int
+  shelfNumber   String
+  available     Boolean   @default(true)
+  description   String?
+  coverImage    String?
+  pdfUrl        String?
+  featured      Boolean   @default(false)
+  popular       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  userId        String?
+  user          User?     @relation("UserBooks", fields: [userId], references: [id])
+  borrows       Borrow[]
+}
+
+model Borrow {
+  id        String   @id @default(cuid())
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  borrowedAt DateTime @default(now())
+  dueDate   DateTime
+  returnedAt DateTime?
+  status    BorrowStatus @default(ACTIVE)
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  titleBn     String
+  description String
+  descriptionBn String
+  date        DateTime
+  time        String
+  location    String
+  locationBn  String
+  organizer   String
+  organizerBn String
+  coverImage  String?
+  status      EventStatus @default(UPCOMING)
+  featured    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userId      String?
+  user        User?      @relation("UserEvents", fields: [userId], references: [id])
+  photos      EventPhoto[]
+  videos      EventVideo[]
+}
+
+model EventPhoto {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model EventVideo {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Gallery {
+  id          String    @id @default(cuid())
+  title       String
+  titleBn     String
+  description String?
+  category    String
+  categoryBn  String
+  imageUrl    String
+  featured    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model News {
+  id          String    @id @default(cuid())
+  title       String
+  titleBn     String
+  content     String
+  contentBn   String
+  category    String
+  categoryBn  String
+  imageUrl    String?
+  featured    Boolean   @default(false)
+  publishedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Notice {
+  id          String    @id @default(cuid())
+  title       String
+  titleBn     String
+  content     String
+  contentBn   String
+  category    String
+  categoryBn  String
+  pdfUrl      String?
+  important   Boolean   @default(false)
+  publishedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Testimonial {
+  id          String    @id @default(cuid())
+  name        String
+  nameBn      String
+  content     String
+  contentBn   String
+  rating      Int       @default(5)
+  imageUrl    String?
+  position    String?
+  featured    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model Download {
+  id          String    @id @default(cuid())
+  title       String
+  titleBn     String
+  fileUrl     String
+  category    String
+  categoryBn  String
+  downloads   Int       @default(0)
+  createdAt   DateTime  @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  bookId    String?
+  book      Book?    @relation(fields: [bookId], references: [id])
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id])
+  newsId    String?
+  news      News?    @relation(fields: [newsId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model CarouselSlide {
+  id          String   @id @default(cuid())
+  title       String
+  titleBn     String
+  description String?
+  descriptionBn String?
+  imageUrl    String
+  link        String?
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  LIBRARIAN
+  STAFF
+  MEMBER
+}
+
+enum BorrowStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+enum EventStatus {
+  UPCOMING
+  ONGOING
+  PAST
+  CANCELLED
+}
