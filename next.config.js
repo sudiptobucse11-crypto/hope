@@ -3,17 +3,14 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: "https",
+        hostname: "**",
       },
     ],
-    domains: ['localhost', 'vercel.app'],
   },
-  experimental: {
-    optimizeCss: true,
-  },
+
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 
