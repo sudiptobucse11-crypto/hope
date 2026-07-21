@@ -4,27 +4,26 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protect admin routes
-  if (pathname.startsWith("/admin")) {
-    const isAuthenticated = request.cookies.has("next-auth.session-token") ||
-      request.cookies.has("__Secure-next-auth.session-token");
-
-    if (!isAuthenticated) {
-      return NextResponse.redirect(
-        new URL("/auth/login", request.url)
-      );
-    }
+  // Allow public routes
+  if (
+    pathname === "/auth/login" ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api")
+  ) {
+    return NextResponse.next();
   }
 
-  // Redirect authenticated users from auth pages
-  if (pathname.startsWith("/auth/")) {
-    const isAuthenticated = request.cookies.has("next-auth.session-token") ||
-      request.cookies.has("__Secure-next-auth.session-token");
+  // Only protect admin routes
+  if (pathname.startsWith("/admin")) {
+    const sessionToken =
+      request.cookies.get("next-auth.session-token")?.value ||
+      request.cookies.get("__Secure-next-auth.session-token")?.value;
 
-    if (isAuthenticated) {
-      return NextResponse.redirect(
-        new URL("/", request.url)
-      );
+    if (!sessionToken) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+
+      return NextResponse.redirect(loginUrl);
     }
   }
 
@@ -32,8 +31,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/auth/:path*",
-  ],
+  matcher: ["/admin/:path*"],
 };
